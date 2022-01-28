@@ -5,9 +5,9 @@ var blocker = require('./blocker.js');
 var quoterBot = require('./quoterBot.js');
 var galnet = require('./galnet.js');
 
-
 var bgsLogger = require('./bgsLogger.js');
 var tickDetector = require('./tickDetector.js');
+var starad = require('./starad.js');
 
 const request = require('request');
 
@@ -61,9 +61,10 @@ client.on('ready', () => {
 
     client.user.setActivity({name: "with yo momma", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", type: "STREAMING"});
 
-    quoterBot.initiateQuotes(client);
+    // quoterBot.initiateQuotes(client);
     galnet.initiateGalnetHook(Discord, client);
     tickDetector.initiate(Discord, client);
+    starad.initiate(Discord, client);
     // bgsLogger.aggregateData(Discord, client, () => {});
 });
 
