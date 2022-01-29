@@ -8,7 +8,6 @@ const fs = require('fs');
 var channelID = "722146937649889470";//"722146937649889470";
 var guildID = "721872207239970866";
 
-var FIRST_LOAD = true;
 var DETECT_INTERVAL = 10;
 
 var Discord;
@@ -31,7 +30,7 @@ const ALERT_DETAILS = {
     },
     'Irregular': {
         color: '#1b7816',//'#11f005',
-        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936253519470673930/alert2irregular.png'
+        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936839759081381888/alert2irregular.png'
     },
     'Elevated': {
         color: '#f0e805',
@@ -53,7 +52,7 @@ const SYSTEM_TYPE = {
     FRINGE: 0
 }; 
 
-var CORE_SYSTEMS = ['Turing', 'Satva', 'Janjiwa', 'HIP 78551', 'Caudjabe'];
+var CORE_SYSTEMS = ['Turing', 'Satva', 'Janjiwa', 'HIP 78551', 'Caudjabe', 'Telenisates'];
 
 var knownData = {};
 var miscData = {};
@@ -130,14 +129,18 @@ async function getInaraTraffic(system){
     }
 }
 
-function runDetectInterval(){
+async function runDetectSquash(){
     try {
-        runDetect();
+        await runDetect();
     }
     catch (e) {
         console.log(e.stack);
         console.log(e.message);
     }
+}
+
+function runDetectInterval(){
+    runDetectSquash();
   
     setTimeout(() => {
         runDetectInterval();
@@ -157,15 +160,6 @@ function sendAlert(alertLevel, text){
 
     var channel = client.channels.cache.get(channelID);
     channel.send(embed);
-
-    /*
-    { name: 'FACTION', value: factionText, inline: true },
-          { name: '\u200B', value: '\u200B', inline: true },
-          { name: 'SYSTEM', value: systemText, inline: true },
-          { name: 'TYPE', value: type, inline: true },
-          { name: '\u200B', value: '\u200B', inline: true },
-          { name: 'VALUE', value: value, inline: true }
-    */
 }
 
 function getSystemType(systemData) {
@@ -180,7 +174,7 @@ function getSystemType(systemData) {
 }
 
 function convertSystemData(systemData) {
-    var converted = systemData;
+    var converted = cloneObj(systemData);
     
     converted['factions'] = {};
     for(var faction of systemData['factions']){
@@ -197,12 +191,54 @@ function convertSystemData(systemData) {
     return converted;
 }
 
-function sendFactionEntered(faction, system, systemData){
+function sendActivationNotice(){
 
+    var text = 'Listening posts at optimal capacity.\n\n**NOW MONITORING:**';
+
+    var core = 0;
+    var controlled = 0;
+    var fringe = 0;
+
+    for (const [system, systemData] of Object.entries(knownData)) {
+        var systemType = getSystemType(systemData);
+        if(systemType == SYSTEM_TYPE.CORE)
+            core++;
+        else if(systemType == SYSTEM_TYPE.CONTROLLED)
+            controlled++;
+        else 
+            fringe++;
+    }
+
+    text += `\n- **${core}** core systems\n- **${controlled}** controlled systems\n- **${fringe}** fringe systems\n`;
+
+    const embed = new Discord.MessageEmbed()
+        .setColor(ALERT_DETAILS[ALERT_LEVEL.SEVERE].color)
+        .setDescription("**STARAD EWS ALERT**")
+        .setThumbnail(ALERT_DETAILS[ALERT_LEVEL.SEVERE].image)
+        .addFields({ name: '**STARAD DEFENSE NETWORK ONLINE**', value: text, inline: false })
+        .setTimestamp()
+        .setFooter('POWERED BY IRIDIUM AEROSPACE DEFENSE INCORPORATED\nKNOW EARLY, STRIKE FAST');
+
+    var channel = client.channels.cache.get(channelID);
+    channel.send(embed);
+}
+
+function sendFactionEntered(faction, system, systemData){
+    var systemType = getSystemType(systemData);
+    var systemTypeStr = systemTypeToName(systemType).toLowerCase();
+
+    if(systemType == SYSTEM_TYPE.FRINGE)
+        return;
+
+    sendAlert(systemType == SYSTEM_TYPE.CORE ? ALERT_LEVEL.IRREGULAR : ALERT_LEVEL.ROUTINE, `${faction} has expanded into the ${system} ${systemTypeStr} system.`);
 }
 
 function sendFactionLeft(faction, system, systemData){
-
+    var systemType = getSystemType(systemData);
+    if(systemType == SYSTEM_TYPE.FRINGE)
+        return;
+    
+    sendAlert(systemType == SYSTEM_TYPE.CORE ? ALERT_LEVEL.IRREGULAR : ALERT_LEVEL.ROUTINE, `${faction} has retreated from the ${system} system.`);
 }
 
 function checkSystemChange(systemData) {
@@ -213,20 +249,20 @@ function checkSystemChange(systemData) {
     var changed = false;
 
     if(updatedMillis > lastUpdatedMillis) {
-        for(const [faction, factionData] of systemData['factions']){
+        for(const [faction, factionData] of Object.entries(systemData['factions'])){
             if(!(faction in knownData[system]['factions'])) { // new faction entered system
                 sendFactionEntered(faction, system, systemData);
                 changed = true;
             }
             else if(!changed && 
                 factionData['faction_details']['faction_presence']['influence'] 
-                    != knownData[system][faction]['faction_details']['faction_presence']['influence']){
+                    != knownData[system]['factions'][faction]['faction_details']['faction_presence']['influence']){
                 // inf change
                 changed = true;
             }
         }
 
-        for (const [faction, factionData] of knownData[system]['factions']) {
+        for (const [faction, factionData] of Object.entries(knownData[system]['factions'])) {
             if(!(faction in systemData['factions'])) { // faction left system
                 sendFactionLeft(faction, system, systemData);
                 changed = true;
@@ -234,7 +270,7 @@ function checkSystemChange(systemData) {
         }
 
         if(!changed) {
-            for(const [conflictName, conflictData] of systemData['conflicts']) {
+            for(const [conflictName, conflictData] of Object.entries(systemData['conflicts'])) {
                 if(!(conflictName in knownData[system]['conflicts'])) // new conflict
                     return true;
                 var c1 = conflictData;
@@ -257,6 +293,33 @@ function systemTypeToName(systemType) {
         return "Controlled";
     if(systemType == SYSTEM_TYPE.FRINGE)
         return "Fringe";
+}
+
+function checkOutdated(system, systemData) {
+    var systemType = getSystemType(systemData);
+    var systemTypeStr = systemTypeToName(systemType);
+
+    if(systemType == SYSTEM_TYPE.FRINGE)
+        return;
+
+    if('Outdated Timer' in miscData && system in miscData['Outdated Timer'] && Date.now() - miscData['Outdated Timer'][system] < 2 * 24 * 60 * 60 * 1000){
+        return; // only warn once per 2 days
+    }
+
+    var days = (Date.now() - Date.parse(systemData['updated_at'])) / 1000 / 60 / 60 / 24;
+
+    if(systemType == SYSTEM_TYPE.CORE && days >= 3 || systemType == SYSTEM_TYPE.CONTROLLED && days >= 5) {
+
+        sendAlert(systemType == SYSTEM_TYPE.CORE ? ALERT_LEVEL.ELEVATED : ALERT_LEVEL.IRREGULAR, `${systemTypeStr} system ${system} has not been updated in ${Math.floor(days)} days.`);
+
+        if(!('Outdated Timer' in miscData))
+            miscData['Outdated Timer'] = {};
+
+        miscData['Outdated Timer'][system] = Date.now();
+
+        saveData();
+
+    }
 }
 
 async function checkTrafficLevels(systemData){
@@ -297,15 +360,15 @@ async function checkTrafficLevels(systemData){
     }
 }
 
-function hasExpansionState(stateArr){
-    for(var state of stateArr){
-        if(state['state'] == 'expansion')
+function hasState(state, stateArr){
+    for(var state of stateArr)
+        if(state['state'] == state)
             return true;
 }
 
 function getSecondFactionInSystem(systemData) {
     var factions = [];
-    for(const [faction, factionData] of systemData['factions'])
+    for(const [faction, factionData] of Object.entries(systemData['factions']))
         factions.push([faction, factionData['faction_details']['faction_presence']['influence']]);
     
     factions.sort(function(first, second) {
@@ -319,6 +382,8 @@ function getSecondFactionInSystem(systemData) {
 
 function checkInfluenceDrop(systemData) {
     var systemType = getSystemType(systemData);
+    var systemTypeStr = systemTypeToName(systemType).toLowerCase();
+
     var system = systemData['name'];
 
     var currentInf = systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['influence'];
@@ -342,10 +407,10 @@ function checkInfluenceDrop(systemData) {
     }
     else return;
 
-    var str = `Starlance Alpha ${drop}% influence drop in ${systemType.toLowerCase()} system ${system} detected.`;
+    var str = `${PRIMARY_FACTION} ${Math.floor(drop)}% influence drop in ${systemTypeStr} system ${system} detected.`;
 
-    if(hasExpansionState(systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['recovering_states']) && 
-        !hasExpansionState(knownData[system]['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['recovering_states'])) {
+    if(hasState('expansion', systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['recovering_states']) && 
+        !hasState('expansion', knownData[system]['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['recovering_states'])) {
         str += " If we were expanding out of this system, 15% of the drop is a result of the expansion ending.";
     }
 
@@ -354,6 +419,8 @@ function checkInfluenceDrop(systemData) {
 
 function checkInfluenceGapDrop(systemData) {
     var systemType = getSystemType(systemData);
+    var systemTypeStr = systemTypeToName(systemType).toLowerCase();
+
     var system = systemData['name'];
 
     var currentInf = systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['influence'];
@@ -366,7 +433,7 @@ function checkInfluenceGapDrop(systemData) {
     
     var currentGap = currentInf - current2ndFac[1];
     var previousGap = previousInf - previous2ndFac[1];
-    
+
     var drop = (previousGap - currentGap) * 100;
 
     var alertLevel;
@@ -388,10 +455,10 @@ function checkInfluenceGapDrop(systemData) {
     }
     else return;
 
-    var str = `Starlance Alpha lead on ${current2ndFac[0]} in ${systemType.toLowerCase()} system ${system} has dropped by ${drop}%.`;
+    var str = `${PRIMARY_FACTION} lead on ${current2ndFac[0]} in ${systemTypeStr} system ${system} has dropped by ${Math.floor(drop)}%.`;
 
-    if(hasExpansionState(systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['recovering_states']) && 
-        !hasExpansionState(knownData[system]['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['recovering_states'])) {
+    if(hasState('expansion', systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['recovering_states']) && 
+        !hasState('expansion', knownData[system]['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['recovering_states'])) {
         str += " If we were expanding out of this system, 15% of the drop is a result of the expansion ending.";
     }
 
@@ -399,28 +466,135 @@ function checkInfluenceGapDrop(systemData) {
 }
 
 function checkConflictChange(systemData) {
-    // TODO
-
     var systemType = getSystemType(systemData);
+    var systemTypeStr = systemTypeToName(systemType).toLowerCase();
+
     var system = systemData['name'];
 
-    for(const [conflictName, conflictData] of systemData['conflicts']) {
+    for(const [conflictName, conflictData] of Object.entries(systemData['conflicts'])) {
+
+        var type = conflictData['type'];
+        var type2 = type;
+        if(type2 == 'election') type2 = 'elections';
+
+        var type3 = type2 == 'elections' ? `in ${type2}` : `at ${type2}`;
 
         var f1 = conflictData['faction1'];
         var f2 = conflictData['faction2'];
-        
+
+        var f1Key = 'faction1';
+        var f2Key = 'faction2';
+
         if(f2['name'] == PRIMARY_FACTION){
             var temp = f1;
             f1 = f2;
             f2 = temp;
-        }
-        
-        var scoreStr = `\n**War score:**\n${f1['name']}: ${f1['days_won']}\n${f2['name']}: ${f2['days_won']}`;
 
-        if(!(conflictName in knownData[system]['conflicts'])){
-            
+            temp = f1Key;
+            f1Key = f2Key;
+            f2Key = temp;
         }
+
+        if(f1['name'] != PRIMARY_FACTION && systemType == SYSTEM_TYPE.FRINGE)
+            continue;
+        if(f1['name'] == 'Starlance Alpha' && f2['name'] == 'Union of Jath for Equality' && system == 'Lundji') // no one cares
+            continue;
+        
+        var alertLevel = ALERT_LEVEL.ROUTINE;
+        var str = '';
+        var scoreStr = `\n\n**${type.toUpperCase()} SCORE :**\n${f1['name']}: **${f1['days_won']}**\n${f2['name']}: **${f2['days_won']}**`;
+
+        var newConflict = !(conflictName in knownData[system]['conflicts']);
+        if(conflictData['status'] == 'pending' && (newConflict || knownData[system]['conflicts'][conflictName]['status'] != 'pending')){
+            str = `${f1['name']} is now pending ${type2} against ${f2['name']} in ${systemTypeStr} system ${system}.`;
+            
+            if(f2['name'] == PRIMARY_FACTION){
+                if(systemType == SYSTEM_TYPE.CONTROLLED)
+                    alertLevel = ALERT_LEVEL.SEVERE;
+                else if(systemType == SYSTEM_TYPE.CORE)
+                    alertLevel = ALERT_LEVEL.CRITICAL;
+            }
+        }
+        else if(conflictData['status'] == 'active'){
+            if(newConflict || knownData[system]['conflicts'][conflictName]['status'] != 'active') {
+                str = `${f1['name']} is now ${type3} against ${f2['name']} in ${systemTypeStr} system ${system}.`;
+
+                if(f2['name'] == PRIMARY_FACTION){
+                    if(systemType == SYSTEM_TYPE.CONTROLLED)
+                        alertLevel = ALERT_LEVEL.SEVERE;
+                    else if(systemType == SYSTEM_TYPE.CORE)
+                        alertLevel = ALERT_LEVEL.CRITICAL;
+                }
+            }
+            else {
+                // ticked
+                if(f1['days_won'] > knownData[system]['conflicts'][conflictName][f1Key]['days_won']) {
+                    str = `${f1['name']} has won a day of ${type2} against ${f2['name']} in ${systemTypeStr} system ${system}.`;
+
+                    // if(f1['name'] == PRIMARY_FACTION) {
+                    //     if(systemType == SYSTEM_TYPE.CONTROLLED)
+                    //         alertLevel = ALERT_LEVEL.IRREGULAR;
+                    //     else if(systemType == SYSTEM_TYPE.CORE)
+                    //         alertLevel = ALERT_LEVEL.ELEVATED;
+                    // }
+                }
+                if(f2['days_won'] > knownData[system]['conflicts'][conflictName][f2Key]['days_won']) {
+                    if(f1['name'] == PRIMARY_FACTION) {
+                        str = `${f1['name']} has lost a day of ${type2} against ${f2['name']} in ${systemTypeStr} system ${system}.`;
+
+                        if(systemType == SYSTEM_TYPE.CONTROLLED)
+                            alertLevel = ALERT_LEVEL.SEVERE;
+                        else if(systemType == SYSTEM_TYPE.CORE)
+                            alertLevel = ALERT_LEVEL.CRITICAL;
+                        else alertLevel = ALERT_LEVEL.IRREGULAR;
+                    }
+                    else 
+                        str = `${f2['name']} has won a day of ${type2} against ${f1['name']} in ${systemTypeStr} system ${system}.`;
+                }
+            }
+        }
+        else if(conflictData['status'] == '' && (newConflict || knownData[system]['conflicts'][conflictName]['status'] != '')){
+            if(f1['days_won'] > f2['days_won']) {
+                str = `${f1['name']} has won the ${type2} against ${f2['name']} in ${systemTypeStr} system ${system}.`;
+
+                // if(f1['name'] == PRIMARY_FACTION) {
+                //     if(systemType >= SYSTEM_TYPE.CONTROLLED)
+                //         alertLevel = ALERT_LEVEL.IRREGULAR;
+                // }
+            }
+            else if(f1['days_won'] < f2['days_won']) {
+                if(f1['name'] == PRIMARY_FACTION) {
+                    str = `${f1['name']} has been defeated in the ${type2} against ${f2['name']} in ${systemTypeStr} system ${system}.`;
+
+                    if(systemType >= SYSTEM_TYPE.CONTROLLED)
+                        alertLevel = ALERT_LEVEL.CRITICAL;
+                    else
+                        alertLevel = ALERT_LEVEL.IRREGULAR;
+                }
+                else 
+                    str = `${f2['name']} has won the ${type2} against ${f1['name']} in ${systemTypeStr} system ${system}.`;
+            }
+            else {
+                str = `${f2['name']} has drawed in the ${type2} against ${f1['name']} in ${systemTypeStr} system ${system}.`;
+
+                if(f1['name'] == PRIMARY_FACTION && systemType >= SYSTEM_TYPE.CONTROLLED)
+                    alertLevel = ALERT_LEVEL.SEVERE;
+            }
+        }
+
+        if(str == '')
+            continue;
+
+        if(f1['name'] != PRIMARY_FACTION)
+            str = 'Third party conflict status change detected.\n\n' + str;
+        str = str + scoreStr;
+
+        sendAlert(alertLevel, str);
     }
+}
+
+function cloneObj(obj){
+    return JSON.parse(JSON.stringify(obj));
 }
 
 async function runDetect(){
@@ -445,11 +619,25 @@ async function runDetect(){
         systems.push(system);
     }
 
+    var firstLoad = Object.keys(knownData).length == 0 && systems.length > 0;
+
     var wasNoPendingExpansion = true;
     for(var system of systems){
-        if(hasExpansionState(knownData[system]['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
+        if(system in knownData && hasState('expansion', knownData[system]['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
             wasNoPendingExpansion = false;
             break;
+        }
+    }
+
+    var knownSystems = [];
+    for (const [system, systemData] of Object.entries(knownData))
+        knownSystems.push(system);
+    
+    for(var system of knownSystems) {
+        if(!systems.includes(system)) {
+            sendAlert(ALERT_LEVEL.CRITICAL, `${PRIMARY_FACTION} has retreated from the ${system} system.`);
+            delete knownData[system];
+            saveData();
         }
     }
 
@@ -461,17 +649,25 @@ async function runDetect(){
         var systemType = getSystemType(systemData);
         if(systemType >= SYSTEM_TYPE.CONTROLLED) {
             await checkTrafficLevels(systemData);
+            checkOutdated(system, systemData);
         }
 
         if(!(system in knownData)){
-            sendAlert(ALERT_LEVEL.ROUTINE, `Starlance Alpha has entered the ${system} system.`);
-            knownData[system] = systemData;
+            if(!firstLoad)
+                sendAlert(ALERT_LEVEL.ROUTINE, `${PRIMARY_FACTION} has expanded into the ${system} system.`);
+            knownData[system] = cloneObj(systemData);
+            saveData();
             knownData[system]['conflicts'] = {}; // force checking of invasion war
         }
 
-        if(wasNoPendingExpansion && hasExpansionState(systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
-            sendAlert(ALERT_LEVEL.ROUTINE, `Starlance Alpha is entering expansion.`);
+        if(wasNoPendingExpansion && hasState('expansion', systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
+            sendAlert(ALERT_LEVEL.ROUTINE, `${PRIMARY_FACTION} is entering expansion.`);
             wasNoPendingExpansion = false;
+        }
+
+        if(hasState('retreat', systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states']) || 
+            hasState('retreat', systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['active_states'])) {
+            sendAlert(ALERT_LEVEL.CRITICAL, `${PRIMARY_FACTION} is entering retreat in ${system}.`);
         }
 
         if(checkSystemChange(systemData)){
@@ -481,22 +677,16 @@ async function runDetect(){
                 checkInfluenceGapDrop(systemData);
 
             checkConflictChange(systemData);
-        }
 
-        // if(primaryControlling){
-        //     sendAlert(ALERT_LEVEL.IRREGULAR, `Faction Union of Jath for Equality has entered the ${system} system.`);
-        //     sendAlert(ALERT_LEVEL.IRREGULAR, `Core system ${system} has not been updated in 3 days.`);
-        //     sendAlert(ALERT_LEVEL.ELEVATED, `Starlance Alpha 5% influence drop in ${system} detected.`);
-        //     sendAlert(ALERT_LEVEL.ELEVATED, `Starlance Alpha 10% influence drop in ${system} detected.`);
-        //     sendAlert(ALERT_LEVEL.ELEVATED, `Starlance Alpha lead on Union of Jath for Equality in ${system} has dropped by 10%.`);
-        // }
-        // else sendAlert(ALERT_LEVEL.ELEVATED, `Starlance Alpha has lost a day of war in fringe system ${system}.\n**War score:**\nStarlance Alpha: 0\nUnion of Jath for Equality: 1`);
-        
-        // if(primaryControlling) {
-        //     sendAlert(ALERT_LEVEL.SEVERE, `Starlance Alpha 20% influence drop in ${system} detected.`);
-        //     sendAlert(ALERT_LEVEL.SEVERE, `Starlance Alpha lead on Union of Jath for Equality in ${system} has dropped by 20%.`);
-        //     sendAlert(ALERT_LEVEL.SEVERE, `Starlance Alpha has lost a day of war in core system ${system}.\n**War score:**\nStarlance Alpha: 0\nUnion of Jath for Equality: 1`);
-        //     sendAlert(ALERT_LEVEL.CRITICAL, `Starlance Alpha has lost a day of war in critical system ${system}.\n**War score:**\nStarlance Alpha: 0\nUnion of Jath for Equality: 1`);
-        // }
+            // updating data store for this system
+            knownData[system] = cloneObj(systemData);
+            saveData();
+        }
     }
+    
+    if(firstLoad){
+        sendActivationNotice();
+    }
+
+    console.log("EWS detection pass complete.");
 }
