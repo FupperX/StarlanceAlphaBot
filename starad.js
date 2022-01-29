@@ -5,7 +5,7 @@
 const request = require('request');
 const fs = require('fs');
 
-var channelID = "722146937649889470";//"722146937649889470";
+var channelID = "783011426595766332";//"722146937649889470";
 var guildID = "721872207239970866";
 
 var DETECT_INTERVAL = 10;
@@ -26,23 +26,23 @@ const ALERT_LEVEL = {
 const ALERT_DETAILS = {
     'Routine': {
         color: '#05c5f0',
-        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936253519185469450/alert1routine.png'
+        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936843277829812224/alert1routine.png'
     },
     'Irregular': {
-        color: '#1b7816',//'#11f005',
-        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936839759081381888/alert2irregular.png'
+        color: '#2ab823', //'#1b7816',//'#11f005',
+        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936843278089863278/alert2irregular.png'
     },
     'Elevated': {
         color: '#f0e805',
-        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936253519806205992/alert3elevated.png'
+        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936843278400229386/alert3elevated.png'
     },
     'Severe': {
         color: '#ff5100',
-        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936253520062079016/alert4severe.png'
+        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936843280686120960/alert4severe.png'
     },
     'Critical': {
         color: '#ff0000',
-        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936253520330518568/alert5critical.png'
+        image: 'https://cdn.discordapp.com/attachments/722146937649889470/936843280946188298/alert5critical.png'
     }
 }
 
@@ -193,7 +193,7 @@ function convertSystemData(systemData) {
 
 function sendActivationNotice(){
 
-    var text = 'Listening posts at optimal capacity.\n\n**NOW MONITORING:**';
+    var text = 'Listening posts operating at optimal capacity.\n\n**NOW MONITORING:**';
 
     var core = 0;
     var controlled = 0;
@@ -212,9 +212,9 @@ function sendActivationNotice(){
     text += `\n- **${core}** core systems\n- **${controlled}** controlled systems\n- **${fringe}** fringe systems\n`;
 
     const embed = new Discord.MessageEmbed()
-        .setColor(ALERT_DETAILS[ALERT_LEVEL.SEVERE].color)
+        .setColor(ALERT_DETAILS[ALERT_LEVEL.IRREGULAR].color)
         .setDescription("**STARAD EWS ALERT**")
-        .setThumbnail(ALERT_DETAILS[ALERT_LEVEL.SEVERE].image)
+        .setThumbnail(ALERT_DETAILS[ALERT_LEVEL.IRREGULAR].image)
         .addFields({ name: '**STARAD DEFENSE NETWORK ONLINE**', value: text, inline: false })
         .setTimestamp()
         .setFooter('POWERED BY IRIDIUM AEROSPACE DEFENSE INCORPORATED\nKNOW EARLY, STRIKE FAST');
