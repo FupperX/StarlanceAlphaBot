@@ -504,6 +504,8 @@ function checkConflictChange(systemData) {
     for(const [conflictName, conflictData] of Object.entries(systemData['conflicts'])) {
 
         var type = conflictData['type'];
+        if(type == 'civilwar') type = 'civil war';
+
         var type2 = type;
         if(type2 == 'election') type2 = 'elections';
 
