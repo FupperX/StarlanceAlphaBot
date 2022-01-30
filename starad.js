@@ -536,9 +536,12 @@ function checkConflictChange(systemData) {
         var str = '';
         var scoreStr = `\n\n**${type.toUpperCase()} SCORE :**\n${f1['name']}: **${f1['days_won']}**\n${f2['name']}: **${f2['days_won']}**`;
 
+        var pending = false;
+
         var newConflict = !(conflictName in knownData[system]['conflicts']);
         if(conflictData['status'] == 'pending' && (newConflict || knownData[system]['conflicts'][conflictName]['status'] != 'pending')){
             str = `${f1['name']} is now pending ${type2} against ${f2['name']} in ${systemTypeStr} system ${system}.`;
+            pending = true;
             
             if(f2['name'] == PRIMARY_FACTION){
                 if(systemType == SYSTEM_TYPE.CONTROLLED)
@@ -549,7 +552,8 @@ function checkConflictChange(systemData) {
         }
         else if(conflictData['status'] == 'active'){
             if(newConflict || knownData[system]['conflicts'][conflictName]['status'] != 'active') {
-                str = `${f1['name']} is now ${type3} against ${f2['name']} in ${systemTypeStr} system ${system}.`;
+                var capType3 = type3.substring(0, 1).toUpperCase() + type3.substring(1).toLowerCase();
+                str = `${capType3} between ${f1['name']} and ${f2['name']} is now active in ${systemTypeStr} system ${system}.`;
 
                 if(f2['name'] == PRIMARY_FACTION){
                     if(systemType == SYSTEM_TYPE.CONTROLLED)
@@ -618,8 +622,12 @@ function checkConflictChange(systemData) {
             continue;
 
         if(f1['name'] != PRIMARY_FACTION)
-            str = 'Third party conflict status change detected.\n\n' + str;
-        str = str + scoreStr;
+            str = `Third-party conflict${pending ? '' : ' status change'} detected.\n\n${str}`;
+        
+        if(!pending)
+            str = str + scoreStr;
+
+        str += "\n_ _";
 
         sendAlert(alertLevel, str);
     }
