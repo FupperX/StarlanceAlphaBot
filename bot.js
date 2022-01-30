@@ -61,7 +61,7 @@ client.on('ready', () => {
 
     client.user.setActivity({name: "with yo momma", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", type: "STREAMING"});
 
-    // quoterBot.initiateQuotes(client);
+    quoterBot.initiateQuotes(client);
     galnet.initiateGalnetHook(Discord, client);
     tickDetector.initiate(Discord, client);
     starad.initiate(Discord, client);
