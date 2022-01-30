@@ -360,9 +360,9 @@ async function checkTrafficLevels(systemData){
     }
 }
 
-function hasState(state, stateArr){
+function hasState(stateLook, stateArr){
     for(var state of stateArr)
-        if(state['state'] == state)
+        if(state['state'] == stateLook)
             return true;
 }
 
