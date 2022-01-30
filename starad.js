@@ -281,6 +281,36 @@ function checkSystemChange(systemData) {
                     return true;
             }
         }
+
+        if(!changed){
+            for (const [faction, factionData] of Object.entries(knownData[system]['factions'])) {
+                for(var state of factionData['faction_details']['faction_presence']['active_states']) {
+                    if(!hasState(state, knownData[system]['factions'][faction]['faction_details']['faction_presence']['active_states']))
+                        return true;
+                }
+                for(var state of factionData['faction_details']['faction_presence']['pending_states']) {
+                    if(!hasState(state, knownData[system]['factions'][faction]['faction_details']['faction_presence']['pending_states']))
+                        return true;
+                }
+                for(var state of factionData['faction_details']['faction_presence']['recovering_states']) {
+                    if(!hasState(state, knownData[system]['factions'][faction]['faction_details']['faction_presence']['recovering_states']))
+                        return true;
+                }
+
+                for(var state of knownData[system]['factions'][faction]['faction_details']['faction_presence']['active_states']) {
+                    if(!hasState(state, factionData['faction_details']['faction_presence']['active_states']))
+                        return true;
+                }
+                for(var state of knownData[system]['factions'][faction]['faction_details']['faction_presence']['pending_states']) {
+                    if(!hasState(state, factionData['faction_details']['faction_presence']['pending_states']))
+                        return true;
+                }
+                for(var state of knownData[system]['factions'][faction]['faction_details']['faction_presence']['recovering_states']) {
+                    if(!hasState(state, factionData['faction_details']['faction_presence']['recovering_states']))
+                        return true;
+                }
+            }
+        }
     }
 
     return changed;
