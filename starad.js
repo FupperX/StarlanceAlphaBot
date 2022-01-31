@@ -735,7 +735,7 @@ async function runDetect(callback){
             allSystems.push(system);
 
     for(var system of knownSystems) {
-        if(PRIMARY_FACTION in system['factions']) {
+        if(PRIMARY_FACTION in knownData[system]['factions']) {
             if(!systems.includes(system)) {
                 sendAlert(ALERT_LEVEL.CRITICAL, `${PRIMARY_FACTION} has retreated from the ${system} system.`);
                 if(!supportingSystems.includes(system)) {
