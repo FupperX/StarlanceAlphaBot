@@ -5,6 +5,8 @@ var blocker = require('./blocker.js');
 var quoterBot = require('./quoterBot.js');
 var galnet = require('./galnet.js');
 
+var cmdMan = require('./commandManager.js');
+
 var bgsLogger = require('./bgsLogger.js');
 var tickDetector = require('./tickDetector.js');
 var starad = require('./starad.js');
@@ -107,6 +109,13 @@ client.on('messageCreate', msg => {
   handleMessage(msg);
 });
 
+client.on('interactionCreate', interaction => {
+  if(interaction.isCommand()){
+    cmdMan.handleCommand(Discord, client, interaction);
+    return;
+  }
+});
+
 async function handleMessage(msg){
   var gMember = await msg.channel.guild.members.fetch(msg.author);
   if(sayBlacklist.includes(msg.author.id) || (gMember != null && gMember.roles.cache.some(r => r.id == "806439101829873664"))){ // stfu role
@@ -119,6 +128,11 @@ async function handleMessage(msg){
   // }
 
   msgLower = msg.content.toLowerCase();
+
+  if(msgLower == "srlacmdsetup" && msg.author.id == '250850608246947851'){
+    cmdMan.registerCommands(client, msg.channel);
+    return;
+  }
 
   if(msg.author.id == "327946633499246593"){ // neutro attachment
     var yes = msgLower.endsWith(".mp4");
@@ -176,7 +190,7 @@ async function handleMessage(msg){
     msg.channel.send({files: ['https://media1.tenor.com/images/6a2bce1ed140432737290514df1e24e9/tenor.gif']});
   }
   else if(msgLower.startsWith("bgslog")){
-    bgsLogger.postLog(Discord, client, msg);
+    bgsLogger.postLogMsg(Discord, client, msg);
   }
   else if(msgLower.startsWith("bgstotal")){
     bgsLogger.aggregateData(Discord, client, msg.channel, () => {});
@@ -298,11 +312,11 @@ async function runSetRoles(msg, arr){
   var channel = client.channels.cache.get(arr[1]);
   
   var tMsg = await channel.messages.fetch(arr[2]);
-  for(var reacc of tMsg.reactions.cache.array()){
-    var c = await reacc.users.fetch();
+  for(var reacc of tMsg.reactions.cache.entries()){
+    var c = await reacc[1].users.fetch();
 
-    for(var u of c.array()){
-      users.add(u);
+    for(var u of c.entries()){
+      users.add(u[1]);
     }
   }
   

@@ -17,6 +17,7 @@ var factionLinks = {
 
 var factionLookup = {
   'sa': 'Starlance Alpha',
+  'srla': 'Starlance Alpha',
   'jup': 'Janjiwa Union Party',
   'unje': 'Union of Jath for Equality',
   'mfmi': 'Mould Federal Mining Incorporated',
@@ -28,58 +29,58 @@ var factionLookup = {
 
 var types = {
   'bounty': 'Bounty',
-  'bounties': 'Bounty',
+  // 'bounties': 'Bounty',
   'b': 'Bounty',
 
   'combatbond': 'Combat Bond',
-  'combatbonds': 'Combat Bond',
-  'bond': 'Combat Bond',
-  'bonds': 'Combat Bond',
+  // 'combatbonds': 'Combat Bond',
+  // 'bond': 'Combat Bond',
+  // 'bonds': 'Combat Bond',
   'cb': 'Combat Bond',
   
-  'explo': 'Exploration Data',
-  'exploration': 'Exploration Data',
+  // 'explo': 'Exploration Data',
+  // 'exploration': 'Exploration Data',
   'explorationdata': 'Exploration Data',
-  'explodata': 'Exploration Data',
+  // 'explodata': 'Exploration Data',
   'data': 'Exploration Data',
   'e': 'Exploration Data',
   'd': 'Exploration Data',
 
   'conflictzonehigh': 'Conflict Zone (High)',
-  'zonehigh': 'Conflict Zone (High)',
+  // 'zonehigh': 'Conflict Zone (High)',
   'czh': 'Conflict Zone (High)',
   
   'conflictzonemedium': 'Conflict Zone (Medium)',
-  'zonemedium': 'Conflict Zone (Medium)',
+  // 'zonemedium': 'Conflict Zone (Medium)',
   'czm': 'Conflict Zone (Medium)',
 
   'conflictzonelow': 'Conflict Zone (Low)',
-  'zonelow': 'Conflict Zone (Low)',
+  // 'zonelow': 'Conflict Zone (Low)',
   'czl': 'Conflict Zone (Low)',
 
   'installationdefense': 'Installation Defense',
-  'installation': 'Installation Defense',
+  // 'installation': 'Installation Defense',
   'id': 'Installation Defense',
 
   'tradeprofit': 'Trade Profit',
-  'trade': 'Trade Profit',
-  't': 'Trade Profit',
+  // 'trade': 'Trade Profit',
+  // 't': 'Trade Profit',
   'tp': 'Trade Profit',
   
   'tradeloss': 'Trade Loss',
   'tl': 'Trade Loss',
   
   'murder': 'Murder',
-  'mu': 'Murder',
+  // 'mu': 'Murder',
 
   'smuggling': 'Smuggling',
-  's': 'Smuggling',
+  // 's': 'Smuggling',
 
-  'mission': 'Mission INF+',
-  'missions': 'Mission INF+',
-  'mi': 'Mission INF+',
+  // 'mission': 'Mission INF+',
+  // 'missions': 'Mission INF+',
+  // 'mi': 'Mission INF+',
   'inf': 'Mission INF+',
-  'inf+': 'Mission INF+',
+  // 'inf+': 'Mission INF+',
   'i': 'Mission INF+'
 };
 
@@ -98,9 +99,12 @@ var typeColors = {
   'Mission INF+': '#f0e805'
 }
 
+exports.validTypes = types;
+
 var chartColors = ['5, 197, 240', '5, 240, 177', '240, 134, 5'];
 
-var validTypeStr = 'Valid types are bounty (b), combatbond (cb), mission (inf, i), explorationdata (e, data, d), conflictzonehigh (czh), czm, czl, installationdefense (installation, id), tradeprofit (tp), tradeloss (tl), murder (mu), smuggling (s).';
+// var validTypeStr = 'Valid types are bounty (b), combatbond (cb), mission (inf, i), explorationdata (e, data, d), conflictzonehigh (czh), czm, czl, installationdefense (installation, id), tradeprofit (tp), tradeloss (tl), murder (mu), smuggling (s).';
+var validTypeStr = 'Valid types are bounty (b), combatbond (cb), inf (i), explorationdata (e, data, d), conflictzonehigh (czh), czm, czl, installationdefense (id), tradeprofit (tp), tradeloss (tl), murder, smuggling.';
 
 function isNumeric(str) {
   if (typeof str != "string") return false // we only process strings!  
@@ -134,7 +138,11 @@ function numericize(str){
   var multi = 1;
   str = str.replace(/_/g, '').replace(/,/g, '').toLowerCase();
   
-  if(str.endsWith("m")){
+  if(str.endsWith("k")){
+    str = str.slice(0, -1);
+    multi = 1000;
+  }
+  else if(str.endsWith("m")){
     str = str.slice(0, -1);
     multi = 1000000;
   }
@@ -157,47 +165,58 @@ function numericize(str){
 
 }
 
-exports.postLog = async function(Discord, client, msg) {
+exports.postLogMsg = async function(Discord, client, msg) {
+  var guild = client.guilds.cache.get(guildID);
+  var gMember = await guild.members.fetch(msg.author);
+  var user = gMember.displayName;
 
-    var guild = client.guilds.cache.get(guildID);
-    var gMember = await guild.members.fetch(msg.author);
-    var user = gMember.displayName;
+  var content = msg.content.split(' ');
 
-    var content = msg.content.split(' ');
+  if(content.length < 5){
+    msg.reply("invalid syntax. bgslog usage: `bgslog <faction> <system> <type> <value>`. \nExample: `bgslog Starlance_Alpha Turing bounty 10,000,000`\n\u200b\n" + validTypeStr);
+    return;
+  }
 
-    if(content.length < 5){
-      msg.reply("invalid syntax. bgslog usage: `bgslog <faction> <system> <type> <value>`. \nExample: `bgslog Starlance_Alpha Turing bounty 10,000,000`\n\u200b\n" + validTypeStr);
-      return;
-    }
+  content = content.slice(1);
 
-    content = content.slice(1);
+  var type = content[2].replace(/_/g, '').toLowerCase();
+  if(type in types){
+    type = types[type];
+  }
+  else {
+    msg.reply('unknown type `' + type + '`. ' + validTypeStr);
+    return;
+  }
+
+  this.postLog(Discord, client, msg, user, content[0], content[1], type, content[3]);
+}
+
+exports.parseFaction = function(faction) {
+  var faction = faction.replace(/_/g, ' ');
+  if(faction.toLowerCase() in factionLookup){
+    faction = factionLookup[faction.toLowerCase()];
+  }
+  else {
+    faction = capitalize(faction);
+  }
+  return faction;
+}
+
+exports.parseSystem = function(system){
+  return capitalize(system.replace(/_/g, ' '));
+}
+
+exports.postLog = async function(Discord, client, interaction, user, faction, system, type, value) {
+
+    var faction = this.parseFaction(faction);
+    var system = this.parseSystem(system);
     
-    var faction = content[0].replace(/_/g, ' ');
-    if(faction.toLowerCase() in factionLookup){
-      faction = factionLookup[faction.toLowerCase()];
-    }
-    else {
-      faction = capitalize(faction);
-    }
-
-    var system = capitalize(content[1].replace(/_/g, ' '));
-    
-    var type = content[2].replace(/_/g, '').toLowerCase();
-    if(type in types){
-      type = types[type];
-    }
-    else {
-      msg.reply('unknown type `' + type + '`. ' + validTypeStr);
-      return;
-    }
-    
-    var ovalue = content[3];
-    var value = ovalue;
+    var valueStr = value;
 
     // if(!type.startsWith('Conflict Zone') && type != 'Murder'){
-    value = numericize(value);
+    value = numericize(valueStr);
     if(value < 0){
-      msg.reply('invalid numerical value `' + ovalue + '`. Valid examples: `10,000,000`, `10000000`, `10m`, `10mil`');
+      interaction.reply({content: 'Invalid numerical value `' + valueStr + '`. Valid examples: `10,000,000`, `10000000`, `10m`, `10mil`, `10k`'});
       return;
     }
     // }
@@ -233,7 +252,7 @@ exports.postLog = async function(Discord, client, msg) {
     var channel = client.channels.cache.get(channelID);
     channel.send({embeds: [embed]});
 
-    msg.channel.send("BGS contribution logged!");
+    interaction.reply({content: "BGS contribution logged!"});
 }
 
 exports.forwardTickDetect = function(Discord, client, msg) {
@@ -295,13 +314,11 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
   var daysToCollect = 3;
 
   channel.messages.fetch({limit: 100}).then(messages => {
-    var msgArr = messages.array();
-
     var day = 0;
     var datasetLabels = ['Current Tick'];
 
-    for(var i = 0; i < msgArr.length; i++){
-      var msg = msgArr[i];
+    for(var entry of messages.entries()){
+      var msg = entry[1];
 
       if(msg.embeds.length > 0) {
         if(msg.embeds[0].title){
