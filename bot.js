@@ -48,11 +48,17 @@ const Discord = require('discord.js');
 const {Client, Intents} = require('discord.js');
 
 const intents = new Intents([
-    Intents.NON_PRIVILEGED, // include all non-privileged intents, would be better to specify which ones you actually need
-    "GUILD_MEMBERS", // lets you request guild members (i.e. fixes the issue)
+  Intents.FLAGS.GUILDS,
+  Intents.FLAGS.GUILD_INTEGRATIONS,
+  Intents.FLAGS.GUILD_MESSAGES,
+  Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+  Intents.FLAGS.GUILD_MESSAGE_TYPING,
+  Intents.FLAGS.DIRECT_MESSAGES,
+  Intents.FLAGS.GUILD_MEMBERS, // lets you request guild members (i.e. fixes the issue)
 ]);
 
-const client = new Client({ ws: { intents } });
+//const client = new Client({ ws: { intents } });
+const client = new Client({ intents: intents });
 
 var allValidCharLazy = "(\\w| |-|\\.|_|')*?";
 
@@ -78,7 +84,7 @@ function sendReport(channel){
   const titleEmbed = new Discord.MessageEmbed()
     .setColor('#00c3ff')
     .setTitle('<:freedom:739496082102288454><:freedom:739496082102288454><:freedom:739496082102288454>     DAILY BGS REPORT     <:freedom:739496082102288454><:freedom:739496082102288454><:freedom:739496082102288454>');
-  channel.send(titleEmbed);
+  channel.send({embeds: [titleEmbed]});
   // channel.send("<@332846508888031232> systemstatus get turing");
   // channel.send("<@332846508888031232> factionstatus get starlance alpha");
   channel.send("<@332846508888031232> bgsreport get");
@@ -97,8 +103,12 @@ client.on('guildMemberAdd', member => {
   member.guild.channels.cache.get('721872207239970869').send(msg);
 });
 
-client.on('message', msg => {
-  var gMember = msg.channel.guild.member(msg.author);
+client.on('messageCreate', msg => {
+  handleMessage(msg);
+});
+
+async function handleMessage(msg){
+  var gMember = await msg.channel.guild.members.fetch(msg.author);
   if(sayBlacklist.includes(msg.author.id) || (gMember != null && gMember.roles.cache.some(r => r.id == "806439101829873664"))){ // stfu role
     console.log("DELETING | " + msg.author.username + ": " + msg.content);
     msg.delete({timeout: 0});
@@ -175,7 +185,7 @@ client.on('message', msg => {
     // const embed = new Discord.MessageEmbed()
     //     .setImage("https://media1.tenor.com/images/78fd2dae59ad2b1e744c57232e1b5b7b/tenor.gif?itemid=15496843");
 
-    // msg.channel.send(embed);
+    // msg.channel.send({embeds: [embed]});
     msg.channel.send({files: ['https://media1.tenor.com/images/78fd2dae59ad2b1e744c57232e1b5b7b/tenor.gif?itemid=15496843']});
   }
   else if(msgLower.startsWith("say ")){
@@ -281,7 +291,7 @@ client.on('message', msg => {
       }
     }
   }
-});
+}
 
 async function runSetRoles(msg, arr){
   var users = new Set();
@@ -308,7 +318,7 @@ async function runSetRoles(msg, arr){
   var count = 0;
 
   for(var user of users){
-    var member = channel.guild.member(user);
+    var member = await channel.guild.members.fetch(user);
     if(!member.roles.cache.some(r => r.id == role.id)){
       member.roles.add(role);
       s += (s == "" ? "" : ", ") + member.nickname;

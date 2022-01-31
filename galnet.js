@@ -90,7 +90,7 @@ exports.initiateGalnetHook = function(discord, _client) {
             }
 
             var channel = client.channels.cache.get(channelID);
-            channel.send(embed);
+            channel.send({embeds: [embed]});
 
         });
 

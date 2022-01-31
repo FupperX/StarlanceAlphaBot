@@ -157,10 +157,11 @@ function numericize(str){
 
 }
 
-exports.postLog = function(Discord, client, msg) {
+exports.postLog = async function(Discord, client, msg) {
 
     var guild = client.guilds.cache.get(guildID);
-    var user = guild.member(msg.author).displayName;
+    var gMember = await guild.members.fetch(msg.author);
+    var user = gMember.displayName;
 
     var content = msg.content.split(' ');
 
@@ -227,10 +228,10 @@ exports.postLog = function(Discord, client, msg) {
           { name: 'VALUE', value: value, inline: true },
         )
         .setTimestamp()
-        .setFooter(user);
+        .setFooter({ text: user });
 
     var channel = client.channels.cache.get(channelID);
-    channel.send(embed);
+    channel.send({embeds: [embed]});
 
     msg.channel.send("BGS contribution logged!");
 }
@@ -253,7 +254,7 @@ exports.forwardTickDetect = function(Discord, client, msg) {
         .setTimestamp();
 
     var channel = client.channels.cache.get(channelID);
-    channel.send(embed);
+    channel.send({embeds: [embed]});
   }
 }
 
@@ -273,7 +274,7 @@ function sendTickMsg(Discord, client, tickTime, timeFormatted) {
       .setTimestamp(tickTime);
 
   var channel = client.channels.cache.get(channelID);
-  channel.send(embed);
+  channel.send({embeds: [embed]});
 };
 
 function sortObject(obj) {
@@ -488,10 +489,10 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
         .addFields(
           fields
         )
-        .setFooter(`${cmdrs.size} commanders contributed`)
+        .setFooter({ text: `${cmdrs.size} commanders contributed` })
         .setTimestamp();
 
-    postChannel.send(embed);
+    postChannel.send({embeds: [embed]});
 
   }).catch(err => console.log(err));
 }

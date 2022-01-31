@@ -19,7 +19,7 @@
   "homepage": "https://github.com/FupperX/StarlanceAlphaBot#readme",
   "dependencies": {
     "cron": "^1.8.2",
-    "discord.js": "^12.2.0",
+    "discord.js": "^13.6.0",
     "dom-parser": "^0.1.6",
     "dotenv": "^8.2.0",
     "moment": "^2.29.1",

@@ -156,10 +156,10 @@ function sendAlert(alertLevel, text){
         // .addFields(fields)
         .addFields({ name: alertLevel.toUpperCase() + ' ALERT', value: text, inline: false })
         .setTimestamp()
-        .setFooter('POWERED BY IRIDIUM AEROSPACE DEFENSE INCORPORATED\nKNOW EARLY, STRIKE FAST');
+        .setFooter({ text: 'POWERED BY IRIDIUM AEROSPACE DEFENSE INCORPORATED\nKNOW EARLY, STRIKE FAST' });
 
     var channel = client.channels.cache.get(channelID);
-    channel.send(embed);
+    channel.send({embeds: [embed]});
 }
 
 function getSystemType(systemData) {
@@ -217,10 +217,10 @@ function sendActivationNotice(){
         .setThumbnail(ALERT_DETAILS[ALERT_LEVEL.IRREGULAR].image)
         .addFields({ name: '**STARAD DEFENSE NETWORK ONLINE**', value: text, inline: false })
         .setTimestamp()
-        .setFooter('POWERED BY IRIDIUM AEROSPACE DEFENSE INCORPORATED\nKNOW EARLY, STRIKE FAST');
+        .setFooter({ text: 'POWERED BY IRIDIUM AEROSPACE DEFENSE INCORPORATED\nKNOW EARLY, STRIKE FAST' });
 
     var channel = client.channels.cache.get(channelID);
-    channel.send(embed);
+    channel.send({embeds: [embed]});
 }
 
 function sendFactionEntered(faction, system, systemData){
