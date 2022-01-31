@@ -569,7 +569,10 @@ function checkConflictChange(systemData, faction, supporting) {
         
         var alertLevel = ALERT_LEVEL.ROUTINE;
         var str = '';
-        var scoreStr = `\n\n**${type.toUpperCase()} SCORE :**\n${f1['name']}: **${f1['days_won']}**${f1['name'] != PRIMARY_FACTION && supporting ? " (supporting)" : ""}\n${f2['name']}: **${f2['days_won']}**`;
+        var f1n = f1['name'];
+        if(f1n == faction)
+            f1n = `__${f1n}__`;
+        var scoreStr = `\n\n**${type.toUpperCase()} SCORE :**\n${f1n}: **${f1['days_won']}**\n${f2['name']}: **${f2['days_won']}**`;
 
         var pending = false;
 
@@ -725,19 +728,23 @@ async function runDetect(callback){
     var knownSystems = [];
     for (const [system, systemData] of Object.entries(knownData))
         knownSystems.push(system);
-    
-    for(var system of knownSystems) {
-        if(!systems.includes(system)) {
-            sendAlert(ALERT_LEVEL.CRITICAL, `${PRIMARY_FACTION} has retreated from the ${system} system.`);
-            delete knownData[system];
-            saveData();
-        }
-    }
 
     var supportingSystems = getSupportingSystems();
     for(var system of supportingSystems)
         if(!allSystems.includes(system))
             allSystems.push(system);
+
+    for(var system of knownSystems) {
+        if(PRIMARY_FACTION in system['factions']) {
+            if(!systems.includes(system)) {
+                sendAlert(ALERT_LEVEL.CRITICAL, `${PRIMARY_FACTION} has retreated from the ${system} system.`);
+                if(!supportingSystems.includes(system)) {
+                    delete knownData[system];
+                    saveData();
+                }
+            }
+        }
+    }
 
     for(var system of allSystems){
         var hasPrimaryFaction = systems.includes(system);
@@ -912,8 +919,14 @@ function getSupportedEmbed(){
         for (const [faction, systems] of Object.entries(miscData["Supported"])) {
             for(const [system, monitorInf] of Object.entries(systems)){
                 factionField += `${faction}` + "\n";
-                systemField += system + "\n";
-                infField += (monitorInf ? "Yes" : "No") + "\n";
+                
+                var numLines = Math.ceil(faction.length / 30);
+                var padding = "";
+                for(var i = 0; i < numLines-1; i++)
+                    padding += "_ _\n";
+                
+                systemField += system + "\n" + padding;
+                infField += (monitorInf ? "Yes" : "No") + "\n" + padding;
             }
         }
     }
