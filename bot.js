@@ -117,11 +117,15 @@ client.on('interactionCreate', interaction => {
 });
 
 async function handleMessage(msg){
-  var gMember = await msg.channel.guild.members.fetch(msg.author);
-  if(sayBlacklist.includes(msg.author.id) || (gMember != null && gMember.roles.cache.some(r => r.id == "806439101829873664"))){ // stfu role
-    console.log("DELETING | " + msg.author.username + ": " + msg.content);
-    msg.delete({timeout: 0});
-    return;
+  try {
+    var gMember = await msg.channel.guild.members.fetch(msg.author);
+    if(sayBlacklist.includes(msg.author.id) || (gMember != null && gMember.roles.cache.some(r => r.id == "806439101829873664"))){ // stfu role
+      console.log("DELETING | " + msg.author.username + ": " + msg.content);
+      msg.delete({timeout: 0});
+      return;
+    }
+  }
+  catch (err) {
   }
   // if(msg.channel.id == '736467872561496114'){ // #bgs-report
   //   bgsLogger.forwardTickDetect(Discord, client, msg);
