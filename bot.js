@@ -28,7 +28,20 @@ var gottem = [
   "https://media1.tenor.com/images/82a9076fd2d9b1a574cb239750b1491e/tenor.gif",
   "https://media1.tenor.com/images/44b0ce9266cb067a3f6503783f34a466/tenor.gif",
   "https://media1.tenor.com/images/668812942bdb73ede0f0c1f42a6e51f3/tenor.gif",
-  "https://media.tenor.com/images/24eb3ea5bd37be83f5f16b8ad62f75c8/tenor.gif"
+  "https://media.tenor.com/images/24eb3ea5bd37be83f5f16b8ad62f75c8/tenor.gif",
+  "https://c.tenor.com/re87WrqXllMAAAAC/squidward-dab-poop-eating.gif",
+  "https://c.tenor.com/TPGtPNQWEVwAAAAC/dab-dabbing.gif",
+  "https://c.tenor.com/abjfWbrzhFYAAAAC/rio-dab.gif",
+  "https://c.tenor.com/XoUB2E303IsAAAAd/jim-carrey-boo.gif",
+  "https://c.tenor.com/rnlK8eERQIMAAAAC/doctor-dab.gif",
+  "https://c.tenor.com/YDNJq_XugRsAAAAC/gottem-memes.gif",
+  "https://c.tenor.com/YXUKBEMftmYAAAAd/get-rekt.gif",
+  "https://c.tenor.com/9P4y1AbzSKAAAAAC/obama-point.gif",
+  "https://c.tenor.com/JAUntHHguSAAAAAC/rekt-get.gif",
+  "https://c.tenor.com/8mnrYcikj3sAAAAC/meme-troll.gif",
+  "https://c.tenor.com/MXfP0HsRNnYAAAAd/troll-trolled.gif",
+  "https://c.tenor.com/6v4coJ3bdMYAAAAC/troll-trolled.gif",
+  "https://c.tenor.com/wLVKHg0LlKwAAAAC/dab.gif"
 ];
 
 var ym1 = [
@@ -295,7 +308,7 @@ async function handleMessage(msg){
       var str = msgLower.substring(ind);
       if((str.match(/ /g) || []).length < 5){
         var a = Math.random() * 100;
-        if(a <= 10){
+        if(a <= 2){
           var s1 = ym1[Math.floor(Math.random() * ym1.length)];
           var s2 = ym2[Math.floor(Math.random() * ym2.length)];
           msg.channel.send(s1 + " " + s2 + " is " + str);
