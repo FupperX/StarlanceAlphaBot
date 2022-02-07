@@ -775,7 +775,7 @@ async function runDetect(callback){
             wasNoPendingExpansion = false;
         }
 
-        var hasChanged = checkSystemChange(systemData, hasPrimaryFaction && systemType >= systemType.CONTROLLED) || forceCheck;
+        var hasChanged = checkSystemChange(systemData, hasPrimaryFaction && systemType >= SYSTEM_TYPE.CONTROLLED) || forceCheck;
 
         for(var faction of Object.keys(systemData['factions'])) {
             var support = isSupporting(faction, system);
