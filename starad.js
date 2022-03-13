@@ -429,6 +429,10 @@ function getSecondFactionInSystem(systemData) {
 }
 
 function checkInfluenceDrop(systemData, faction, supporting) {
+
+    if(!(faction in knownData[system]['factions']))
+        return;
+
     var systemType = getSystemType(systemData);
     var systemTypeStr = systemTypeToName(systemType).toLowerCase();
     if(supporting) {
@@ -470,6 +474,10 @@ function checkInfluenceDrop(systemData, faction, supporting) {
 }
 
 function checkInfluenceGapDrop(systemData, faction, supporting) {
+
+    if(!(faction in knownData[system]['factions']))
+        return;
+
     var systemType = getSystemType(systemData);
     var systemTypeStr = systemTypeToName(systemType).toLowerCase();
 
