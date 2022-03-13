@@ -719,7 +719,7 @@ async function runDetect(callback){
 
     var wasNoPendingExpansion = true;
     for(var system of systems){
-        if(system in knownData && hasState('expansion', knownData[system]['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
+        if(system in knownData && PRIMARY_FACTION in knownData[system]['factions'] && hasState('expansion', knownData[system]['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
             wasNoPendingExpansion = false;
             break;
         }
@@ -761,16 +761,20 @@ async function runDetect(callback){
 
         var forceCheck = false;
 
-        if(!(system in knownData)){
-            if(!firstLoad && hasPrimaryFaction)
+        if(!firstLoad && hasPrimaryFaction) {
+            if(!(system in knownData && PRIMARY_FACTION in knownData[system]['factions'])) {
                 sendAlert(ALERT_LEVEL.ROUTINE, `${PRIMARY_FACTION} has expanded into the ${system} system.`);
-            knownData[system] = cloneObj(systemData);
-            saveData();
-            knownData[system]['conflicts'] = {}; // force checking of invasion war
-            forceCheck = true;
+            }
+
+            if(!(system in knownData)) {
+                knownData[system] = cloneObj(systemData);
+                saveData();
+                knownData[system]['conflicts'] = {}; // force checking of invasion war
+                forceCheck = true;
+            }
         }
 
-        if(hasPrimaryFaction && wasNoPendingExpansion && hasState('expansion', systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
+        if(hasPrimaryFaction && wasNoPendingExpansion && PRIMARY_FACTION in systemData['factions'] && hasState('expansion', systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
             sendAlert(ALERT_LEVEL.ROUTINE, `${PRIMARY_FACTION} is entering expansion.`);
             wasNoPendingExpansion = false;
         }
