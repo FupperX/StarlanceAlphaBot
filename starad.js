@@ -267,7 +267,7 @@ function checkSystemChange(systemData, sendEnterLeft) {
     if(updatedMillis > lastUpdatedMillis) {
         for(const [faction, factionData] of Object.entries(systemData['factions'])){
             if(!(faction in knownData[system]['factions'])) { // new faction entered system
-                if(sendEnterLeft)
+                if(sendEnterLeft && faction != PRIMARY_FACTION)
                     sendFactionEntered(faction, system, systemData);
                 changed = true;
             }
@@ -430,6 +430,7 @@ function getSecondFactionInSystem(systemData) {
 
 function checkInfluenceDrop(systemData, faction, supporting) {
 
+    var system = systemData['name'];
     if(!(faction in knownData[system]['factions']))
         return;
 
@@ -439,8 +440,6 @@ function checkInfluenceDrop(systemData, faction, supporting) {
         systemType = SYSTEM_TYPE.FRINGE;
         systemTypeStr = "supported";
     }
-
-    var system = systemData['name'];
 
     var currentInf = systemData['factions'][faction]['faction_details']['faction_presence']['influence'];
     var previousInf = knownData[system]['factions'][faction]['faction_details']['faction_presence']['influence'];
@@ -475,6 +474,7 @@ function checkInfluenceDrop(systemData, faction, supporting) {
 
 function checkInfluenceGapDrop(systemData, faction, supporting) {
 
+    var system = systemData['name'];
     if(!(faction in knownData[system]['factions']))
         return;
 
@@ -485,8 +485,6 @@ function checkInfluenceGapDrop(systemData, faction, supporting) {
         systemType = SYSTEM_TYPE.FRINGE;
         systemTypeStr = "supported";
     }
-
-    var system = systemData['name'];
 
     var currentInf = systemData['factions'][faction]['faction_details']['faction_presence']['influence'];
     var previousInf = knownData[system]['factions'][faction]['faction_details']['faction_presence']['influence'];
