@@ -480,7 +480,7 @@ function checkInfluenceDrop(systemData, faction, supporting) {
 function checkInfluenceGapDrop(systemData, faction, supporting) {
 
     var system = systemData['name'];
-    if(!(faction in knownData[system]['factions']))
+    if(!(system in knownData) || !(faction in knownData[system]['factions']))
         return;
 
     var systemType = getSystemType(systemData);
