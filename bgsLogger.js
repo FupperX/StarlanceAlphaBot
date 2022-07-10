@@ -53,17 +53,17 @@ var types = {
   'conflictzonehigh': 'Conflict Zone (High)',
   // 'zonehigh': 'Conflict Zone (High)',
   'czh': 'Conflict Zone (High)',
-  'gczh': 'Ground Conflict Zone (High)',
+  'gczh': 'Ground CZ (High)',
   
-  'conflictzonemedium': 'Conflict Zone (Medium)',
+  'conflictzonemedium': 'Conflict Zone (Med)',
   // 'zonemedium': 'Conflict Zone (Medium)',
-  'czm': 'Conflict Zone (Medium)',
-  'gczm': 'Ground Conflict Zone (Medium)',
+  'czm': 'Conflict Zone (Med)',
+  'gczm': 'Ground CZ (Med)',
 
   'conflictzonelow': 'Conflict Zone (Low)',
   // 'zonelow': 'Conflict Zone (Low)',
   'czl': 'Conflict Zone (Low)',
-  'gczl': 'Ground Conflict Zone (Low)',
+  'gczl': 'Ground CZ (Low)',
 
   'installationdefense': 'Installation Defense',
   // 'installation': 'Installation Defense',
@@ -97,11 +97,11 @@ var typeColors = {
   'Bounty': '#f02c05',
   'Combat Bond': '#f00505',
   'Conflict Zone (High)': '#c70000',
-  'Conflict Zone (Medium)': '#c70000',
+  'Conflict Zone (Med)': '#c70000',
   'Conflict Zone (Low)': '#c70000',
-  'Ground Conflict Zone (High)': '#c70000',
-  'Ground Conflict Zone (Medium)': '#c70000',
-  'Ground Conflict Zone (Low)': '#c70000',
+  'Ground CZ (High)': '#c70000',
+  'Ground CZ (Med)': '#c70000',
+  'Ground CZ (Low)': '#c70000',
   'Installation Defense': '#c70000',
   'Exploration Data': '#05c5f0',
   'Exobiology Data': '#05c5f0',
@@ -437,7 +437,7 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
     }
 
     if(fields.length == 0){
-      fields.push({ name: '\u200B', value: 'No contributions this tick so far\n' });
+      fields.push({ name: '\u200B', value: 'No contributions this tick so far' });
     }
     else {
       var totalField = "";
