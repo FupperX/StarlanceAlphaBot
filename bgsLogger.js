@@ -456,6 +456,7 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
       for(var loc of locations) {
         locField += loc + "\n";
       }
+      fields.push({ name: '\u200B', value: '\u200B', inline: true });
       fields.push({ name: '\u200B\nLOCATIONS', value: locField, inline: true });
     }
 
