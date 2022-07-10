@@ -43,6 +43,12 @@ exports.registerCommands = async function(client, channel){
                     required: true
                 },
                 {
+                    name: 'location',
+                    type: 'STRING',
+                    description: 'Location at which this contribution occurred, if important (e.g. ground CZs)',
+                    required: false
+                },
+                {
                     name: 'user',
                     type: 'STRING',
                     description: 'User who you are logging for',
@@ -186,7 +192,9 @@ exports.handleCommand = async function(Discord, client, interaction) {
             }
         }
 
-        bgsLogger.postLog(Discord, client, interaction, user, interaction.options.getString("faction"), interaction.options.getString("system"), interaction.options.getString("type"), interaction.options.getString("value"));
+        var location = interaction.options.getString("location");
+
+        bgsLogger.postLog(Discord, client, interaction, user, interaction.options.getString("faction"), interaction.options.getString("system"), interaction.options.getString("type"), interaction.options.getString("value"), location);
 
         return;
     }

@@ -27,6 +27,7 @@ var factionLookup = {
   'bspm': 'Bluestar PMC'
 };
 
+// Note: 25 choices max for slash command options
 var types = {
   'bounty': 'Bounty',
   // 'bounties': 'Bounty',
@@ -46,17 +47,23 @@ var types = {
   'e': 'Exploration Data',
   'd': 'Exploration Data',
 
+  'exobiology': 'Exobiology Data',
+  //'exo': 'Exobiology Data',
+
   'conflictzonehigh': 'Conflict Zone (High)',
   // 'zonehigh': 'Conflict Zone (High)',
   'czh': 'Conflict Zone (High)',
+  'gczh': 'Ground Conflict Zone (High)',
   
   'conflictzonemedium': 'Conflict Zone (Medium)',
   // 'zonemedium': 'Conflict Zone (Medium)',
   'czm': 'Conflict Zone (Medium)',
+  'gczm': 'Ground Conflict Zone (Medium)',
 
   'conflictzonelow': 'Conflict Zone (Low)',
   // 'zonelow': 'Conflict Zone (Low)',
   'czl': 'Conflict Zone (Low)',
+  'gczl': 'Ground Conflict Zone (Low)',
 
   'installationdefense': 'Installation Defense',
   // 'installation': 'Installation Defense',
@@ -71,6 +78,8 @@ var types = {
   'tl': 'Trade Loss',
   
   'murder': 'Murder',
+  'groundmurder': 'Ground Murder',
+  //'gmurder': 'Ground Murder',
   // 'mu': 'Murder',
 
   'smuggling': 'Smuggling',
@@ -90,11 +99,16 @@ var typeColors = {
   'Conflict Zone (High)': '#c70000',
   'Conflict Zone (Medium)': '#c70000',
   'Conflict Zone (Low)': '#c70000',
+  'Ground Conflict Zone (High)': '#c70000',
+  'Ground Conflict Zone (Medium)': '#c70000',
+  'Ground Conflict Zone (Low)': '#c70000',
   'Installation Defense': '#c70000',
   'Exploration Data': '#05c5f0',
+  'Exobiology Data': '#05c5f0',
   'Trade Profit': '#11f005',
   'Trade Loss': '#f08605',
   'Murder': '#8A0303',
+  'Ground Murder': '#8A0303',
   'Smuggling': '#f0057e',
   'Mission INF+': '#f0e805'
 }
@@ -104,7 +118,7 @@ exports.validTypes = types;
 var chartColors = ['5, 197, 240', '5, 240, 177', '240, 134, 5'];
 
 // var validTypeStr = 'Valid types are bounty (b), combatbond (cb), mission (inf, i), explorationdata (e, data, d), conflictzonehigh (czh), czm, czl, installationdefense (installation, id), tradeprofit (tp), tradeloss (tl), murder (mu), smuggling (s).';
-var validTypeStr = 'Valid types are bounty (b), combatbond (cb), inf (i), explorationdata (e, data, d), conflictzonehigh (czh), czm, czl, installationdefense (id), tradeprofit (tp), tradeloss (tl), murder, smuggling.';
+var validTypeStr = 'Valid types are bounty (b), combatbond (cb), inf (i), explorationdata (e, data, d), exobiology, conflictzonehigh (czh), czm, czl, gczh, gczm, gczl, installationdefense (id), tradeprofit (tp), tradeloss (tl), murder, groundmurder, smuggling.';
 
 function isNumeric(str) {
   if (typeof str != "string") return false // we only process strings!  
@@ -173,7 +187,7 @@ exports.postLogMsg = async function(Discord, client, msg) {
   var content = msg.content.split(' ');
 
   if(content.length < 5){
-    msg.reply("invalid syntax. bgslog usage: `bgslog <faction> <system> <type> <value>`. \nExample: `bgslog Starlance_Alpha Turing bounty 10,000,000`\n\u200b\n" + validTypeStr);
+    msg.reply("invalid syntax. bgslog usage: `bgslog <faction> <system> <type> <value> [location] [user]`. \nExample: `bgslog Starlance_Alpha Turing bounty 10,000,000`\n\u200b\n" + validTypeStr);
     return;
   }
 
@@ -188,7 +202,12 @@ exports.postLogMsg = async function(Discord, client, msg) {
     return;
   }
 
-  this.postLog(Discord, client, msg, user, content[0], content[1], type, content[3]);
+  var location = undefined;
+  if(content.length >= 5){
+    location = content[4].replace(/_/g, '');
+  }
+
+  this.postLog(Discord, client, msg, user, content[0], content[1], type, content[3], location);
 }
 
 exports.parseFaction = function(faction) {
@@ -206,7 +225,7 @@ exports.parseSystem = function(system){
   return capitalize(system.replace(/_/g, ' '));
 }
 
-exports.postLog = async function(Discord, client, interaction, user, faction, system, type, value) {
+exports.postLog = async function(Discord, client, interaction, user, faction, system, type, value, location) {
 
     var faction = this.parseFaction(faction);
     var system = this.parseSystem(system);
@@ -233,19 +252,26 @@ exports.postLog = async function(Discord, client, interaction, user, faction, sy
     //   factionText = `[${faction}](${factionLinks[faction]})`;
     // }
 
+    var fields = [
+      { name: 'FACTION', value: factionText, inline: true },
+      { name: '\u200B', value: '\u200B', inline: true },
+      { name: 'SYSTEM', value: systemText, inline: true },
+      
+      { name: 'TYPE', value: type, inline: true },
+      { name: '\u200B', value: '\u200B', inline: true },
+      { name: 'VALUE', value: value, inline: true }
+    ];
+
+    if(location != undefined) {
+      fields.push({ name: 'LOCATION', value: capitalize(location), inline: true });
+    }
+
     const embed = new Discord.MessageEmbed()
         // .setColor("#f07b05")
         .setColor(color)
         .setDescription("**BGS CONTRIBUTION**")
         .setThumbnail("https://i.imgur.com/WVTPNml.png")
-        .addFields(
-          { name: 'FACTION', value: factionText, inline: true },
-          { name: '\u200B', value: '\u200B', inline: true },
-          { name: 'SYSTEM', value: systemText, inline: true },
-          { name: 'TYPE', value: type, inline: true },
-          { name: '\u200B', value: '\u200B', inline: true },
-          { name: 'VALUE', value: value, inline: true },
-        )
+        .addFields(fields)
         .setTimestamp()
         .setFooter({ text: user });
 
@@ -310,6 +336,8 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
   var totals = {};
   var cmdrs = new Set();
 
+  var locations = new Set();
+
   var multiTotals = {};
   var daysToCollect = 3;
 
@@ -340,6 +368,11 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
           var system = capitalize(fields[2].value);
           var type = fields[3].value;
           var value = parseInt(fields[5].value.replace(/,/g, ''));
+
+          if(fields.length >= 7) {
+            var location = fields[6].value;
+            locations.add(location);
+          }
 
           if(day == 0){
 
@@ -416,6 +449,14 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
       totalField += '\u200B';
       fields.push({ name: '\u200B\nTOTAL', value: totalField, inline: true });
       fields.push({ name: '\u200B\n\u200B', value: totalValField, inline: true });
+    }
+
+    if(locations.size > 0){
+      var locField = "";
+      for(var loc in locations) {
+        locField += loc + "\n";
+      }
+      fields.push({ name: '\u200B\nLOCATIONS', value: locField, inline: true });
     }
 
     var chartLabels = [];
