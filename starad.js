@@ -259,6 +259,11 @@ function sendFactionLeft(faction, system, systemData){
 
 function checkSystemChange(systemData, sendEnterLeft) {
     var system = systemData['name'];
+
+    if(!(system in knownData)){
+        return true;
+    }
+
     var updatedMillis = Date.parse(systemData['updated_at']);
     var lastUpdatedMillis = Date.parse(knownData[system]['updated_at']);
 
@@ -431,7 +436,7 @@ function getSecondFactionInSystem(systemData) {
 function checkInfluenceDrop(systemData, faction, supporting) {
 
     var system = systemData['name'];
-    if(!(faction in knownData[system]['factions']))
+    if(!(system in knownData) || !(faction in knownData[system]['factions']))
         return;
 
     var systemType = getSystemType(systemData);
