@@ -44,8 +44,8 @@ var types = {
   'explorationdata': 'Exploration Data',
   // 'explodata': 'Exploration Data',
   'data': 'Exploration Data',
-  'e': 'Exploration Data',
-  'd': 'Exploration Data',
+  //'e': 'Exploration Data',
+  //'d': 'Exploration Data',
 
   'exobiology': 'Exobiology Data',
   //'exo': 'Exobiology Data',
@@ -67,7 +67,7 @@ var types = {
 
   'installationdefense': 'Installation Defense',
   // 'installation': 'Installation Defense',
-  'id': 'Installation Defense',
+  //'id': 'Installation Defense',
 
   'tradeprofit': 'Trade Profit',
   // 'trade': 'Trade Profit',
@@ -88,9 +88,9 @@ var types = {
   // 'mission': 'Mission INF+',
   // 'missions': 'Mission INF+',
   // 'mi': 'Mission INF+',
-  'inf': 'Mission INF+',
+  'inf': 'Mission INF+'
   // 'inf+': 'Mission INF+',
-  'i': 'Mission INF+'
+  //'i': 'Mission INF+'
 };
 
 var typeColors = {

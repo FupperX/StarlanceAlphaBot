@@ -3,6 +3,8 @@ var starad = require('./starad.js');
 
 exports.registerCommands = async function(client, channel){
 
+    console.log("Attempting to register " + Object.keys(bgsLogger.validTypes).length + " BGS logger options.");
+
     var bgsLoggerTypeChoices = [];
     for(const [key, value] of Object.entries(bgsLogger.validTypes)) {
         bgsLoggerTypeChoices.push({
