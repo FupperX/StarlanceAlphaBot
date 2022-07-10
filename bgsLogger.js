@@ -437,7 +437,7 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
     }
 
     if(fields.length == 0){
-      fields.push({ name: '\u200B', value: 'No contributions this tick so far' });
+      fields.push({ name: '\u200B', value: 'No contributions this tick so far\n' });
     }
     else {
       var totalField = "";
@@ -457,7 +457,7 @@ exports.aggregateData = function(Discord, client, postChannel, readDoneCB) {
         locField += loc + "\n";
       }
       fields.push({ name: '\u200B', value: '\u200B', inline: true });
-      fields.push({ name: '\u200B\nLOCATIONS', value: locField, inline: true });
+      fields.push({ name: 'LOCATIONS', value: locField, inline: true });
     }
 
     var chartLabels = [];
