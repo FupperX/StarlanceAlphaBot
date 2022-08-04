@@ -165,8 +165,13 @@ function numericize(str){
     multi = 1000000;
   }
 
+  if(str.startsWith("-")){
+    str = str.slice(1);
+    multi *= -1;
+  }
+
   if(!isNumeric(str)){
-    return -1;
+    return undefined;
   }
   
   try {
@@ -174,7 +179,7 @@ function numericize(str){
     return val.toLocaleString();
   }
   catch (err) {
-    return -1;
+    return undefined;
   }
 
 }
@@ -234,7 +239,7 @@ exports.postLog = async function(Discord, client, interaction, user, faction, sy
 
     // if(!type.startsWith('Conflict Zone') && type != 'Murder'){
     value = numericize(valueStr);
-    if(value < 0){
+    if(value == undefined){
       interaction.reply({content: 'Invalid numerical value `' + valueStr + '`. Valid examples: `10,000,000`, `10000000`, `10m`, `10mil`, `10k`'});
       return;
     }
