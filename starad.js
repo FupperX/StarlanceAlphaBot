@@ -771,6 +771,7 @@ async function runDetect(callback){
         }
 
         var forceCheck = false;
+        var firstRetreatCheck = firstLoad;
 
         if(!firstLoad && hasPrimaryFaction) {
             if(!(system in knownData && PRIMARY_FACTION in knownData[system]['factions'])) {
@@ -778,6 +779,7 @@ async function runDetect(callback){
             }
 
             if(!(system in knownData)) {
+                firstRetreatCheck = true;
                 knownData[system] = cloneObj(systemData);
                 saveData();
                 knownData[system]['conflicts'] = {}; // force checking of invasion war
@@ -799,9 +801,24 @@ async function runDetect(callback){
             if(faction != PRIMARY_FACTION && !supporting)
                 continue;
 
-            if(hasState('retreat', systemData['factions'][faction]['faction_details']['faction_presence']['pending_states']) || 
-                hasState('retreat', systemData['factions'][faction]['faction_details']['faction_presence']['active_states'])) {
-                sendAlert(supporting ? ALERT_LEVEL.SEVERE : ALERT_LEVEL.CRITICAL, `${supporting ? "Supported faction " : ""}${faction} is entering retreat in ${system}.`);
+            var hasPendingRetreat = hasState('retreat', systemData['factions'][faction]['faction_details']['faction_presence']['pending_states']);
+            var hasActiveRetreat = hasState('retreat', systemData['factions'][faction]['faction_details']['faction_presence']['active_states']);
+            if(hasPendingRetreat || hasActiveRetreat) {
+                var doSendAlert = false;
+                if (firstRetreatCheck || !(system in knownData) || !(faction in knownData[system]['factions'])) {
+                    doSendAlert = true;
+                }
+                else {
+                    var hadPendingRetreat = hasState('retreat', knownData[system]['factions'][faction]['faction_details']['faction_presence']['pending_states']);
+                    var hadActiveRetreat = hasState('retreat', knownData[system]['factions'][faction]['faction_details']['faction_presence']['active_states']);
+                    if((hasPendingRetreat && !hadPendingRetreat) || (hasActiveRetreat && !hadActiveRetreat)) {
+                        doSendAlert = true;
+                    }
+                }
+
+                if(doSendAlert) {
+                    sendAlert(supporting ? ALERT_LEVEL.SEVERE : ALERT_LEVEL.CRITICAL, `${supporting ? "Supported faction " : ""}${faction} is entering retreat in ${system}.`);
+                }
             }
 
             if(hasChanged){
