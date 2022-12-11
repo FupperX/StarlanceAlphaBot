@@ -102,6 +102,7 @@ function doRequest(url) {
                 resolve(body);
             } 
             else {
+                console.log("Error on request to " + url + ":");
                 console.log(error);
                 resolve(null);
             }
@@ -787,12 +788,15 @@ async function runDetect(callback){
             }
         }
 
+        var changeInPendingExpansion = false;
+
         if(hasPrimaryFaction && wasNoPendingExpansion && PRIMARY_FACTION in systemData['factions'] && hasState('expansion', systemData['factions'][PRIMARY_FACTION]['faction_details']['faction_presence']['pending_states'])) {
             sendAlert(ALERT_LEVEL.ROUTINE, `${PRIMARY_FACTION} is entering expansion.`);
             wasNoPendingExpansion = false;
+            changeInPendingExpansion = true;
         }
 
-        var hasChanged = checkSystemChange(systemData, hasPrimaryFaction && systemType >= SYSTEM_TYPE.CONTROLLED) || forceCheck;
+        var hasChanged = changeInPendingExpansion || forceCheck || checkSystemChange(systemData, hasPrimaryFaction && systemType >= SYSTEM_TYPE.CONTROLLED);
 
         for(var faction of Object.keys(systemData['factions'])) {
             var support = isSupporting(faction, system);
