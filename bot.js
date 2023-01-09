@@ -191,18 +191,18 @@ async function handleMessage(msg){
   //else if(msgLower.includes("fupper") && msg.author.id == '145377571175923712') { // redwood
   //  msg.channel.send('⚠️ **DISCLAIMER** ⚠️ <@145377571175923712> is a tiny dick cucklord and should not be trusted!')
   //}
-  else if(msgLower.includes("bot ") && msg.author.id == '145377571175923712') { // redwood
-    msg.channel.send("<@145377571175923712>'s ego is so fragile that he insults inanimate pieces of software. What a beta cuck pussy, I bet his wife's boyfriend doesn't even let him visit on weekends");
-  }
-  else if((msgLower.includes("damn") || msgLower.includes("wtf") || msgLower.includes("block")) && msg.author.id == '145377571175923712') { // redwood
-    msg.channel.messages.fetch({limit: 2}).then(messageMappings => {
-      let messages = Array.from(messageMappings.values());
-      //let previousMessage = messages[1];
-      if((messages.length > 0 && messages[0].author.id == '728427347451183164') || (messages.length > 1 && messages[1].author.id == '728427347451183164')){ // bot
-        msg.channel.send("<@145377571175923712> well punk that's all you have to say? Get absolutely fucking owned you tiny peenlord");
-      }
-    });
-  }
+  // else if(msgLower.includes("bot ") && msg.author.id == '145377571175923712') { // redwood
+  //   msg.channel.send("<@145377571175923712>'s ego is so fragile that he insults inanimate pieces of software. What a beta cuck pussy, I bet his wife's boyfriend doesn't even let him visit on weekends");
+  // }
+  // else if((msgLower.includes("damn") || msgLower.includes("wtf") || msgLower.includes("block")) && msg.author.id == '145377571175923712') { // redwood
+  //   msg.channel.messages.fetch({limit: 2}).then(messageMappings => {
+  //     let messages = Array.from(messageMappings.values());
+  //     //let previousMessage = messages[1];
+  //     if((messages.length > 0 && messages[0].author.id == '728427347451183164') || (messages.length > 1 && messages[1].author.id == '728427347451183164')){ // bot
+  //       msg.channel.send("<@145377571175923712> well punk that's all you have to say? Get absolutely fucking owned you tiny peenlord");
+  //     }
+  //   });
+  // }
   else if(msgLower.includes("hey fupper") && msgLower.includes("when we going to colonia")){
     msg.channel.send({files: ['https://media1.tenor.com/images/6a2bce1ed140432737290514df1e24e9/tenor.gif']});
   }
