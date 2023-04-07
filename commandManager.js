@@ -91,6 +91,18 @@ exports.registerCommands = async function(client, channel){
                   description: 'Run a STARAD pass manually.'
                 },
                 {
+                  name: 'options',
+                  type: 'SUB_COMMAND',
+                  description: 'Set STARAD options.',
+                  options: [
+                    {
+                        name: 'notifyoutdated',
+                        type: 'BOOLEAN',
+                        description: 'Whether to notify when system data is out of date.'
+                    }
+                  ]
+                },
+                {
                     name: 'supported',
                     type: 'SUB_COMMAND_GROUP',
                     description: 'Manage supported third-party factions.',

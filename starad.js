@@ -758,6 +758,11 @@ async function runDetect(callback){
         }
     }
 
+    var notify_outdated = True;
+    if("Notify Outdated" in miscData) {
+        notify_outdated = miscData["Notify Outdated"];
+    }
+
     for(var system of allSystems){
         var hasPrimaryFaction = systems.includes(system);
 
@@ -766,7 +771,7 @@ async function runDetect(callback){
         var systemData = convertSystemData(json.docs[0]);
 
         var systemType = getSystemType(systemData);
-        if(hasPrimaryFaction && systemType >= SYSTEM_TYPE.CONTROLLED) {
+        if(notify_outdated && hasPrimaryFaction && systemType >= SYSTEM_TYPE.CONTROLLED) {
             await checkTrafficLevels(systemData);
             checkOutdated(system, systemData);
         }
@@ -1006,6 +1011,22 @@ exports.handleCommand = async function(interaction) {
         }
         else interaction.reply({content: "A STARAD sweep is already in progress."});
         return;
+    }
+
+    if(subcmd == "options") {
+        if(!checkPerms(interaction))
+            return;
+        var notify_outdated = interaction.options.getBoolean("notifyoutdated");
+        if(notify_outdated != undefined) {
+            miscData["Notify Outdated"] = notify_outdated;
+
+            saveData();
+
+            interaction.reply({content: `STARAD is ${notify_outdated ? "now" : "no longer"} notifying when systems are out of date.`});
+        }
+        else {
+            interaction.reply({content: `Error: did not provide an option to set.`});
+        }
     }
 
     var subcmdGroup = interaction.options.getSubcommandGroup(false);
