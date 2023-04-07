@@ -758,7 +758,7 @@ async function runDetect(callback){
         }
     }
 
-    var notify_outdated = True;
+    var notify_outdated = true;
     if("Notify Outdated" in miscData) {
         notify_outdated = miscData["Notify Outdated"];
     }
